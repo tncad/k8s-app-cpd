@@ -1,0 +1,5 @@
+resources:
+- nginx-deployment.yaml
+- volume-configmap.yaml
+- container-configmap.yaml
+- nginx-service.yaml
