@@ -1,5 +1,5 @@
 namePrefix: int-
 bases:
-- ../dev
+- ../base
 patches:
 - replica_count.yaml
