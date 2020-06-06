@@ -1,0 +1,8 @@
+environments:
+  default:
+  production:
+---
+helmfiles:
+- "commons/helmDefaults.yaml"
+- "commons/repositories.yaml"
+- path: "releases/helmfile-4.1.yaml"

@@ -1,0 +1,16 @@
+environments:
+  default:
+    values:
+    - ../config/values-default.yaml
+  production:
+    values:
+    - ../config/values-production.yaml
+---
+releases:
+- name: {{ .Environment.Name }}-release-a
+  chart: "local/chart-a"
+  version: 0.1.0
+  namespace: {{ .Environment.Values.namespace }}
+  values:
+  - ../config/values-{{ .Environment.Name }}.yaml
+# same for release-b

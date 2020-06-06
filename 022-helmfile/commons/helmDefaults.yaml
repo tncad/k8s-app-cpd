@@ -1,0 +1,4 @@
+helmDefaults:
+  atomic: true
+  cleanupOnFail: true
+  wait: true

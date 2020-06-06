@@ -1,0 +1,9 @@
+dependencies:
+- name: chart-a
+  repository: http://127.0.0.1:8879/charts
+  version: 0.1.0
+- name: chart-b
+  repository: http://127.0.0.1:8879/charts
+  version: 0.1.0
+digest: sha256:296c801a2a22d6c416b122aa9e0a4050555cd7f54d2dd434cfbf8742262b6c31
+generated: "2020-06-06T18:34:32.251214789+02:00"

@@ -1,0 +1,2 @@
+replicaCount: 6
+namespace: apps

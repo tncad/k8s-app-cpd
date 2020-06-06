@@ -1,0 +1,7 @@
+environments:
+  default:
+    values:
+    - ../config/values-default.yaml
+  production:
+    values:
+    - ../config/values-production.yaml

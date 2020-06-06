@@ -1,0 +1,8 @@
+releases:
+- name: release-a
+  chart: "local/chart-a"
+  version: 0.1.0
+  namespace: default
+  values:
+  - replicaCount: 2
+# same for release-b

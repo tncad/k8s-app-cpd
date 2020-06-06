@@ -1,0 +1,7 @@
+environments:
+  default:
+  production:
+---
+helmfiles:
+- "commons/repositories.yaml"
+- path: "releases/helmfile-3.1.yaml"

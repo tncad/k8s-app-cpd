@@ -1,0 +1,16 @@
+bases:
+- environments.yaml
+
+templates:
+  default: &my-tmpl
+    chart: local/{{`{{ .Release.Name }}`}}
+    values:
+    - ../config/values-{{ .Environment.Name }}.yaml
+
+releases:
+- name: "chart-a"
+  version: 0.1.0
+  <<: *my-tmpl
+- name: "chart-b"
+  version: 0.1.1
+  <<: *my-tmpl
