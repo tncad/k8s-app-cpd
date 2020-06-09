@@ -10,3 +10,14 @@ deploy:
     - nginx-deployment.yaml
     - nginx-service.yaml
     - volume-configmap.yaml
+profiles:
+- name: local-cluster
+  activation:
+  - env: ENV=local
+  - kubeContext: microk8s
+    command: dev
+- name: dev-cluster
+  activation:
+  - env: ENV=dev
+  - kubeContext: arn:aws:eks:<aws_region>:<aws_account>:cluster/aws_dev
+    command: run
