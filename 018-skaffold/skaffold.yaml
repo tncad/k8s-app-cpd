@@ -1,0 +1,12 @@
+apiVersion: skaffold/v2beta4
+kind: Config
+metadata:
+  name: --skaffold
+deploy:
+  kubectl:
+    manifests:
+    - container-configmap.yaml
+    - deployment.yaml
+    - nginx-deployment.yaml
+    - nginx-service.yaml
+    - volume-configmap.yaml
