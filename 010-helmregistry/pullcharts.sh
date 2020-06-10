@@ -38,4 +38,4 @@ do
 done
 
 # copy all new archives to local repository (do not overwrite)
-cp -n `find $HELM_CHARTS_SOURCE -name *.tgz` $registry_folder 
+cp -n `find $HELM_CHARTS_SOURCE -name '*.tgz'` $registry_folder 
