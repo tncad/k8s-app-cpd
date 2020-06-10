@@ -1,0 +1,13 @@
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: nginx-application
+  namespace: default
+  annotations:
+    fluxcd.io/automated: "false"    # intentional for the demo
+spec:
+  releaseName: nginx-release
+  chart:
+    git: ssh://git@github.com/jclarysse/flux-get-started
+    ref: master
+    path: charts/nginx-chart
