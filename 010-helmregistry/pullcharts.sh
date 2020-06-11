@@ -6,6 +6,8 @@ echo "Helm Charts source folder?"
 read HELM_CHARTS_SOURCE
 echo
 
+# Note: a better approach than the following is to fetch for Chart.yaml, retrieve umbrella chart from metadata version and dependencies from helm dep list
+
 # loop accross dependency charts
 for req in `find $HELM_CHARTS_SOURCE -name requirements.yaml`;
 do
