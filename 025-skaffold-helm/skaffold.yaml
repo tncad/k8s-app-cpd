@@ -1,0 +1,29 @@
+apiVersion: skaffold/v2beta4
+kind: Config
+metadata:
+  name: --skaffold
+deploy:
+  helm:
+    releases:
+    - name: postgresql-release
+      namespace: test
+      chartPath: ./postgresql
+      version: 8.6.4
+      setValues:
+        image.tag: 11-debian-10
+        #postgresqlDatabase: airflow
+        pgHbaConfiguration: |-
+          local all all trust
+          host all all all trust
+    - name: airflow-release
+      namespace: test
+      chartPath: ./airflow
+      version: 7.1.5
+      setValues:
+        postgresql.enabled: false
+        externalDatabase.host: postgresql-release
+        externalDatabase.database: postgres
+        externalDatabase.user: postgres
+        externalDatabase.passwordSecret: postgresql-release
+
+
