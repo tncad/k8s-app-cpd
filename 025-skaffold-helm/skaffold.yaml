@@ -25,5 +25,4 @@ deploy:
         externalDatabase.database: postgres
         externalDatabase.user: postgres
         externalDatabase.passwordSecret: postgresql-release
-
-
+        workers.replicas: 1
