@@ -79,17 +79,17 @@ EOF
 echo -e "  releasename: $chart_name\n  chart:\n    repository: \"$src_repository\"\n    name: $chart_name" >> $output_file
 
 # processing files line-by-line
-comment_line="^[ ]*#.*$"
-empty_line="^[ ]*$"
-version_line="^version:.*"
+comment_regex="^[ ]*#.*$"
+empty_regex="^[ ]*$"
+version_regex="^version:.*$"
+tpl_indicator="{"
 
 # chart details
 echo "Parsing $chart_path/Chart.yaml"
 while IFS= read -r line
 do
-  if [[ ! $line =~ $comment_line && ! $line =~ $empty_line ]] ; then
-    #echo "$line"
-    if [[ $line =~ $version_line ]] ; then
+  if [[ ! $line =~ $comment_regex && ! $line =~ $empty_regex ]] ; then
+    if [[ $line =~ $version_regex ]] ; then
        echo "    $line" >> $output_file
     fi
   fi
@@ -108,8 +108,22 @@ fi
 echo "Parsing $value_path"
 while IFS= read -r line
 do
-  if [[ ! $line =~ $comment_line && ! $line =~ $empty_line ]] ; then
-    echo "    $line" | sed "s/{{ k8s_host }}/$des_host/" >> $output_file
+  if [[ ! $line =~ $comment_regex && ! $line =~ $empty_regex ]] ; then
+    # handle templated configs
+    if [[ ${line} == *"$tpl_indicator"* ]] ; then
+      # handle templated config of ingres domain i.e. {{ k8_host }} or {{ lookup('env','K8S_HOST') or 'k8s' }}
+      line=`echo "$line" | sed "s/{{[ ]*\(k8s_host\|lookup('env','K8S_HOST') or 'k8s'\)[ ]*}}/$des_host/g"`
+      # handle templated config of ssl flag i.e. {{ lookup('env','SSL_ENABLED') or 'true' | bool }} 
+      line=`echo "$line" | sed 's/RequireSSL:.*/RequireSSL: true/'`
+      # handle templated config of https URL i.e. {{ 'https' if ssl_enabled == true else 'http' }} 
+      line=`echo "$line" | sed 's/Url: "{{.*}}:/Url: "https:/g'`
+    fi
+    # warn about non handled templated config
+    if [[ ${line} == *"$tpl_indicator"* ]] ; then
+      echo "WARN: Non handled templated config $line"
+    fi
+    # write line to output file
+    echo "    $line" >> $output_file
   fi
 done < "$value_path"
 
