@@ -2,14 +2,13 @@
 
 # default options
 src_repository="https://kubernetes-charts-storage.datapwn.com"
-des_namespace="arch"
-des_host="k8s" # $des_namespace.dev.datapwn.com"
+des_host="k8s" # $arch.dev.datapwn.com"
 gen_folder="/tmp/$(date +'%m_%d_%Y')"
 
 # help
 display_usage() {
 	echo -e "\nUsage:\n$0 [OPTIONS] CHART_PATH\n"
-	echo -e "Options:\n-o: Generation folder (default: $gen_folder)\n-d: Ingres domain (default: $des_host)\n-n: Destination namespace (default: $des_namespace)\n-h: Usage details\n-r: Helm repository (default: $src_repository)\n"
+	echo -e "Options:\n-o: Generation folder (default: $gen_folder)\n-d: Ingres domain (default: $des_host)\n-h: Usage details\n-r: Helm repository (default: $src_repository)\n"
 }
 
 # argument count verififcation 
@@ -48,8 +47,8 @@ case "$#" in
       -d) des_host="$2"
 	  echo "Ingres domain set to $des_host"
 	  shift ;;
-      -n) des_namespace="$2"
-	  echo "Destination namespace set to $des_namespace"
+      -o) gen_folder="$2"
+	  echo "Generation folder set to $gen_folder"
 	  shift ;;
       -r) src_repository="$2"
 	  echo "Helm repository set to $src_repository"
@@ -72,7 +71,7 @@ apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
 EOF
-echo -e "  name: $chart_name\n  namespace: $des_namespace" >> $output_file
+echo -e "  name: $chart_name" >> $output_file
 cat >> $output_file <<- "EOF"
   annotations:
     flux.weave.works/automated: "true"
