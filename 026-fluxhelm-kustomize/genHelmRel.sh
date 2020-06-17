@@ -4,11 +4,12 @@
 src_repository="https://kubernetes-charts-storage.datapwn.com"
 des_namespace="arch"
 des_host="k8s" # $des_namespace.dev.datapwn.com"
+gen_folder="/tmp/$(date +'%m_%d_%Y')"
 
 # help
 display_usage() {
 	echo -e "\nUsage:\n$0 [OPTIONS] CHART_PATH\n"
-	echo -e "Options:\n-d: Ingres domain (default: $des_host)\n-n: Destination namespace (default: $des_namespace)\n-h: Usage details\n-r: Helm repository (default: $src_repository)\n"
+	echo -e "Options:\n-o: Generation folder (default: $gen_folder)\n-d: Ingres domain (default: $des_host)\n-n: Destination namespace (default: $des_namespace)\n-h: Usage details\n-r: Helm repository (default: $src_repository)\n"
 }
 
 # argument count verififcation 
@@ -62,7 +63,8 @@ case "$#" in
 esac
 
 # chart name
-output_file="$chart_name-generated.yaml"
+mkdir -p "$gen_folder/base"
+output_file="$gen_folder/base/$chart_name-generated.yaml"
 echo "Writing $output_file"
 cat > $output_file <<- "EOF"
 ---
@@ -95,17 +97,34 @@ do
   fi
 done < "$chart_path/Chart.yaml"
 
-# chart values (custom rule)
-echo "  values:" >> $output_file
-value_path="${chart_path%%'/helm-charts/'*}/helm-charts-deploy/helm-values/$chart_name/dev.yaml"
-if [ ! -f $value_path ]; then
-   value_path="${chart_path%%'/helm-charts/'*}/helm-charts-deploy/helm-values/$chart_name/values.yaml"
-   if [ ! -f $value_path ]; then
-      echo "Ignoring $chart_path/values.yaml"
-      exit 0
-   fi
+# import existing values from helm-charts-deploy/helm-values, assuming this repository was cloned next to helm-charts (custom rule)
+echo "Looking for existing configurations to import..."
+chart_deploy_dir="${chart_path%%'/helm-charts/'*}/helm-charts-deploy/helm-values/$chart_name"
+if [ ! -d $chart_deploy_dir ]; then
+   echo "ERROR: no custom config repo found next to helm-charts, therefore no values will be imported."
+   exit 1
 fi
+
+# phase 1: import dev configuration to HelmRelease
+value_path="$chart_deploy_dir/dev.yaml"
+if [ ! -f $value_path ]; then
+   echo "Ignoring $chart_path/values.yaml" # defaults, we do not want to replicate them all
+   exit 1
+fi
+
+# TODO
+# phase 2.
+#       - import dev configuration to Kustomize patch
+#       - HelmRelease does not contain any values (default: chart values reflecting prod)
+# phase 3.
+#       - find all confs, build Kustomize patch struct
+
+# replicate helm-values directory structure
+# find $chart_deploy_dir -type d | sed "s|$chart_deploy_dir|${gen_folder}|" | xargs mkdir -p
+cp -R $chart_deploy_dir/* ${gen_folder}/
+
 echo "Parsing $value_path"
+echo "  values:" >> $output_file
 while IFS= read -r line
 do
   if [[ ! $line =~ $comment_regex && ! $line =~ $empty_regex ]] ; then
@@ -126,5 +145,3 @@ do
     echo "    $line" >> $output_file
   fi
 done < "$value_path"
-
-echo "Done"
