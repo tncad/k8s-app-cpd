@@ -66,7 +66,7 @@ fi
 
 # write resources
 echo "resources:" >> $output_file
-for helmRelease in $(fgrep "kind: HelmRelease" ./project/base/*.yaml | cut -d':' -f1)
+for helmRelease in $(fgrep "kind: HelmRelease" $helmrel_path/*.yaml | cut -d':' -f1)
 do
   echo "- ${helmRelease##*/}" >> $output_file
 done

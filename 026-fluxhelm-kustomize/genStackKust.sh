@@ -79,10 +79,7 @@ do
     break
   fi
   # build name prefix
-  if [ ! -z ${namePrefix+x} ] ; then
-    namePrefix="-$namePrefix"
-  fi
-  namePrefix="${abs_cur_dir##*/}$namePrefix"
+  namePrefix="${abs_cur_dir##*/}-$namePrefix"
   # build base dir (relative path)
   rel_base_dir="../$rel_base_dir"
 done
