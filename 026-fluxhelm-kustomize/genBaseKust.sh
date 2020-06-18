@@ -14,7 +14,7 @@ if [ $# -lt 1 ] ; then
   exit 1
 fi
 if [[ $1 == "-h" ]] ; then
-  echo -e "\nDescription:\nCreate a Flux HelmRelease from a Helm chart."
+  echo -e "\nDescription:\nCreate a base Kustomize file listing some HelmRelease resources."
   display_usage
   exit 0
 fi
@@ -23,7 +23,7 @@ fi
 helmrel_path="${@: -1}"
 # remove final slash in case it is passed
 if [[ "${helmrel_path: -1}" == '/' ]] ; then
-  chart_path="${helmrel_path::-1}"
+  helmrel_path="${helmrel_path::-1}"
 fi
 
 # check if there are helmrelease files in the path
