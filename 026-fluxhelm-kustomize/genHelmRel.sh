@@ -19,7 +19,7 @@ if [ $# -lt 1 ] ; then
   exit 1
 fi
 if [[ $1 == "-h" ]] ; then
-  echo -e "\nCreate a Flux HelmRelease from a Helm chart."
+  echo -e "\nDescription:\nCreate a Flux HelmRelease from a Helm chart."
   display_usage
   exit 0
 fi
@@ -32,6 +32,7 @@ if [[ "${chart_path: -1}" == '/' ]] ; then
 fi
 # reduce to parent-path in case Chart.yaml is passed
 chart_path="${chart_path%%'/Chart.yaml'*}"
+# check if there is a Chart.yaml in there
 if [ ! -f "$chart_path/Chart.yaml" ] ; then
   echo "ERROR: Invalid CHART_PATH $chart_path"
   exit 1
@@ -100,7 +101,7 @@ done < "$chart_path/Chart.yaml"
 echo "Looking for existing configurations to import..."
 chart_deploy_dir="${chart_path%%'/helm-charts/'*}/helm-charts-deploy/helm-values/$chart_name"
 if [ ! -d $chart_deploy_dir ]; then
-   echo "ERROR: no custom config repo found next to helm-charts, therefore no values will be imported."
+   echo "WARN: no custom config repo found next to helm-charts, therefore no values will be imported."
    exit 1
 fi
 

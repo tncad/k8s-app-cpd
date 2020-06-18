@@ -1,0 +1,13 @@
+---
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: chart-a
+  annotations:
+    flux.weave.works/automated: "true"
+spec:
+  releasename: chart-a
+  chart:
+    repository: "https://kubernetes-charts-storage.datapwn.com"
+    name: chart-a
+    version: 0.1.0
