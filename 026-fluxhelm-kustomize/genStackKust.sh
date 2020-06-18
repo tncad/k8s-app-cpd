@@ -88,7 +88,7 @@ do
 done
 
 # write patch metadata
-echo -e "namePrefix: $namePrefix\nbases:\n- ${rel_base_dir}base\npatches" >> $output_file
+echo -e "namePrefix: $namePrefix\nbases:\n- ${rel_base_dir}base\npatches:" >> $output_file
 for resPatch in $(find $stack_path/*.yaml ! '(' -name 'kustomization.yaml' ')')
 do
   echo "- ${resPatch##*/}" >> $output_file
