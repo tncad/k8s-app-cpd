@@ -3,12 +3,12 @@
 # default options
 src_repository="https://kubernetes-charts-storage.datapwn.com"
 des_host="k8s" # $arch.dev.datapwn.com"
-gen_folder="/tmp/$(date +'%m_%d_%Y')"
+gen_folder="$(pwd)"
 
 # help
 display_usage() {
 	echo -e "\nUsage:\n$0 [OPTIONS] CHART_PATH\n"
-	echo -e "Options:\n-o: Generation folder (default: $gen_folder)\n-d: Ingres domain (default: $des_host)\n-h: Usage details\n-r: Helm repository (default: $src_repository)\n"
+	echo -e "Options:\n-o: Generation folder (default: $gen_folder)\n-d: Ingres domain (default: $des_host)\n-h: Usage details (--help)\n-r: Helm repository (default: $src_repository)\n"
 }
 
 # argument count verififcation 
@@ -18,7 +18,7 @@ if [ $# -lt 1 ] ; then
   display_usage
   exit 1
 fi
-if [[ $1 == "-h" ]] ; then
+if [[ $1 == "-h" || $1 == "--help" ]] ; then
   echo -e "\nDescription:\nCreate a Flux HelmRelease from a Helm chart."
   display_usage
   exit 0
@@ -46,13 +46,13 @@ case "$#" in
    while [ -n "$1" ]; do
      case "$1" in
       -d) des_host="$2"
-	  echo "Ingres domain set to $des_host"
+	  echo "INFO: Ingres domain set to $des_host"
 	  shift ;;
       -o) gen_folder="$2"
-	  echo "Generation folder set to $gen_folder"
+	  echo "INFO: Generation folder set to $gen_folder"
 	  shift ;;
       -r) src_repository="$2"
-	  echo "Helm repository set to $src_repository"
+	  echo "INFO: Helm repository set to $src_repository"
 	  shift ;;
        --) shift # double dash makes them parameters 
 	  break ;;
@@ -65,7 +65,11 @@ esac
 # chart name
 mkdir -p "$gen_folder/base"
 output_file="$gen_folder/base/$chart_name-generated.yaml"
-echo "Writing $output_file"
+if [ -f $output_file ] ; then
+  echo "WARN: Backing up existing HelmRelease to $output_file.bak"
+  cp "$output_file" "$output_file.bak"
+fi
+echo "INFO: Writing $output_file"
 cat > $output_file <<- "EOF"
 ---
 apiVersion: helm.fluxcd.io/v1
@@ -87,7 +91,7 @@ version_regex="^version:.*$"
 tpl_indicator="{"
 
 # chart details
-echo "Parsing $chart_path/Chart.yaml"
+echo "INFO: Parsing $chart_path/Chart.yaml"
 while IFS= read -r line
 do
   if [[ ! $line =~ $comment_regex && ! $line =~ $empty_regex ]] ; then
@@ -98,17 +102,17 @@ do
 done < "$chart_path/Chart.yaml"
 
 # import existing values from helm-charts-deploy/helm-values, assuming this repository was cloned next to helm-charts (custom rule)
-echo "Looking for existing configurations to import..."
+echo "INFO: Looking for existing configurations to import..."
 chart_deploy_dir="${chart_path%%'/helm-charts/'*}/helm-charts-deploy/helm-values/$chart_name"
 if [ ! -d $chart_deploy_dir ]; then
-   echo "WARN: no custom config repo found next to helm-charts, therefore no values will be imported."
+   echo "WARN: No custom config repo found next to helm-charts, therefore no values will be imported."
    exit 1
 fi
 
 # phase 1: import dev configuration to HelmRelease
 value_path="$chart_deploy_dir/dev.yaml"
 if [ ! -f $value_path ]; then
-   echo "Ignoring $chart_path/values.yaml" # defaults, we do not want to replicate them all
+   echo "INFO: Ignoring default values at $chart_path/values.yaml" # DRY
    exit 1
 fi
 
@@ -123,7 +127,7 @@ fi
 # find $chart_deploy_dir -type d | sed "s|$chart_deploy_dir|${gen_folder}|" | xargs mkdir -p
 cp -R $chart_deploy_dir/* ${gen_folder}/
 
-echo "Parsing $value_path"
+echo "INFO: Parsing $value_path"
 echo "  values:" >> $output_file
 while IFS= read -r line
 do
