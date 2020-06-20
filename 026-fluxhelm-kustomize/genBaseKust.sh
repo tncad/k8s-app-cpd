@@ -2,32 +2,32 @@
 
 # help
 display_usage() {
-	echo -e "\nUsage:\n$0 [OPTIONS] HELMREL_PATH\n"
-	echo -e "Options:\n-n: Default namespace\n-h: Usage details\n"
+	echo -e "\nUsage:\n$0 [OPTIONS] HELMREL_DIR\n"
+	echo -e "Options:\n-n: Default namespace\n-h: Usage details (--help)\n"
 }
 
-# argument count verififcation 
+# argument count verififcation
 # user should supply at least 1 for help option or CHART_PATH parameter
 if [ $# -lt 1 ] ; then
   echo "ERROR: Missing arguments."
   display_usage
   exit 1
 fi
-if [[ $1 == "-h" ]] ; then
-  echo -e "\nDescription:\nCreate a base Kustomize file listing some HelmRelease resources."
+if [[ $1 == "-h" || $1 == "--help" ]] ; then
+  echo -e "\nDescription:\nCreate a Kustomize Base file based on HelmRelease resources available in HELMREL_DIR."
   display_usage
   exit 0
 fi
 
-# verify parameter HELMREL_PATH (last argument)
-helmrel_path="${@: -1}"
+# verify parameter HELMREL_DIR (last argument)
+helmrel_dir="${@: -1}"
 # remove final slash in case it is passed
-if [[ "${helmrel_path: -1}" == '/' ]] ; then
-  helmrel_path="${helmrel_path::-1}"
+if [[ "${helmrel_dir: -1}" == '/' ]] ; then
+  helmrel_dir="${helmrel_dir::-1}"
 fi
 
 # check if there are helmrelease files in the path
-nb_helmrel=$(fgrep "kind: HelmRelease" $helmrel_path/*.yaml | wc -l)
+nb_helmrel=$(fgrep "kind: HelmRelease" $helmrel_dir/*.yaml | wc -l)
 if [ $nb_helmrel -eq 0 ] ; then
   echo "ERROR: No HelmRelease file found in given path."
   exit 1
@@ -53,7 +53,7 @@ case "$#" in
 esac
 
 # create Kustomization
-output_file=$helmrel_path/kustomization.yaml
+output_file=$helmrel_dir/kustomization.yaml
 cat > $output_file <<- "EOF"
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -66,7 +66,7 @@ fi
 
 # write resources
 echo "resources:" >> $output_file
-for helmRelease in $(fgrep "kind: HelmRelease" $helmrel_path/*.yaml | cut -d':' -f1)
+for helmRelease in $(fgrep "kind: HelmRelease" $helmrel_dir/*.yaml | cut -d':' -f1)
 do
   echo "- ${helmRelease##*/}" >> $output_file
 done

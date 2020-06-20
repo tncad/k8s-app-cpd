@@ -1,9 +1,12 @@
 #!/bin/bash
 
+# default values
+include_np=true
+
 # help
 display_usage() {
-	echo -e "\nUsage:\n$0 [OPTIONS] STACK_PATH\n"
-	echo -e "Options:\n-n: Target namespace (will override any default namespace)\n-h: Usage details\n"
+	echo -e "\nUsage:\n$0 [OPTIONS] PATCH_DIR\n"
+	echo -e "Options:\n-p: Include name prefix (default: $include_np)\n-n: Target namespace (will override any default namespace from base)\n-h: Usage details (--help)\n"
 }
 
 # argument count verififcation 
@@ -13,21 +16,21 @@ if [ $# -lt 1 ] ; then
   display_usage
   exit 1
 fi
-if [[ $1 == "-h" ]] ; then
-  echo -e "\nDescription:\nCreate a Stack Kustomize file based on available patches."
+if [[ $1 == "-h" || $1 == "--help" ]] ; then
+  echo -e "\nDescription:\nCreate a Kustomize Patch file based on resources available in PATCH_DIR."
   display_usage
   exit 0
 fi
 
 # verify parameter HELMREL_PATH (last argument)
-stack_path="${@: -1}"
+patch_path="${@: -1}"
 # remove final slash in case it is passed
-if [[ "${stack_path: -1}" == '/' ]] ; then
-  stack_path="${stack_path::-1}"
+if [[ "${patch_path: -1}" == '/' ]] ; then
+  patch_path="${patch_path::-1}"
 fi
 
 # check if there are resource patches in the path
-nb_patch=$(find $stack_path/*.yaml ! '(' -name 'kustomization.yaml' ')' | wc -l)
+nb_patch=$(find $patch_path/*.yaml ! '(' -name 'kustomization.yaml' ')' | wc -l)
 if [ $nb_patch -eq 0 ] ; then
   echo "ERROR: No resource patch found in given path."
   exit 1
@@ -53,7 +56,7 @@ case "$#" in
 esac
 
 # create Kustomization
-output_file=$stack_path/kustomization.yaml
+output_file=$patch_path/kustomization.yaml
 cat > $output_file <<- "EOF"
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -68,14 +71,21 @@ fi
 while true
 do
   # get parent dir (absolute path)
-  abs_cur_dir="$(readlink -f $stack_path/$rel_base_dir)"
+  abs_cur_dir="$(readlink -f $patch_path/$rel_base_dir)"
   if [ ! -d $abs_cur_dir ] ; then 
     echo "ERROR: Cannot find base directory and reached $abs_cur_dir"
     exit 1
   fi
-  # check if base is in there
+  # check if kustomization.yaml file is in there
+  if [ -f "$abs_cur_dir/kustomization.yaml" ] ; then
+    echo "INFO: Found ${rel_base_dir}kustomization.yaml"
+    break
+  fi
+  # check if base folder is in there
   if [ -d "$abs_cur_dir/base" ] ; then
-    echo "INFO: Found $abs_cur_dir/base"
+    # change directory
+    rel_base_dir=${rel_base_dir}base
+    echo "INFO: Found $rel_base_dir"
     break
   fi
   # build name prefix
@@ -85,8 +95,11 @@ do
 done
 
 # write patch metadata
-echo -e "namePrefix: $namePrefix\nbases:\n- ${rel_base_dir}base\npatches:" >> $output_file
-for resPatch in $(find $stack_path/*.yaml ! '(' -name 'kustomization.yaml' ')')
+if [ $inclue_np ]
+  echo "namePrefix: $namePrefix"
+fi
+echo -e "bases:\n- ${rel_base_dir}\npatches:" >> $output_file
+for resPatch in $(find $patch_path/*.yaml ! '(' -name 'kustomization.yaml' ')')
 do
   echo "- ${resPatch##*/}" >> $output_file
 done
