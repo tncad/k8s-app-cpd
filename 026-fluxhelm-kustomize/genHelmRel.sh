@@ -49,8 +49,11 @@ esac
 if [ -z ${chart_path+x} ] ; then
   subscript=/tmp/$(date '+%Y%m%d%H%M%S').sh
   echo "#!/bin/sh" > $subscript
-  echo "Please entry a CHART_PATH:"
+  echo "Please specify a CHART_PATH:"
   while read chart_path; do   # or $(</dev/stdin) if a file of chart_path would be passed
+    if [[ $chart_path == "" ]] ; then
+      break;
+    fi
     echo "INFO: $chart_path"
     echo "$0 $args $chart_path" >> $subscript
   done
