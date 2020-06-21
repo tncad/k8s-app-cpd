@@ -16,9 +16,6 @@ args="$@"
 
 # arguments handling
 case "$#" in
-  0) echo "ERROR: Missing mandatory parameter CHART_PATH."
-     display_usage
-     exit 1 ;; 
   *) while [ -n "$1" ]; do
      case "$1" in
       -d) des_host="$2"
@@ -54,7 +51,7 @@ if [ -z ${chart_path+x} ] ; then
     if [[ $chart_path == "" ]] ; then
       break;
     fi
-    echo "INFO: $chart_path"
+    echo "INFO: CHART_PATH set to $chart_path"
     echo "$0 $args $chart_path" >> $subscript
   done
   chmod +x $subscript && source "$subscript" && rm $subscript
@@ -116,48 +113,48 @@ echo "INFO: Looking for existing configurations to import..."
 chart_deploy_dir="${chart_path%%'/helm-charts/'*}/helm-charts-deploy/helm-values/$chart_name"
 if [ ! -d $chart_deploy_dir ]; then
    echo "WARN: No custom config repo found next to helm-charts, therefore no values will be imported."
-   exit 1
-fi
-
-# phase 1: import dev configuration to HelmRelease
-value_path="$chart_deploy_dir/dev.yaml"
-if [ ! -f $value_path ]; then
-   echo "INFO: Ignoring default values at $chart_path/values.yaml" # DRY
 else
 
-  # TODO
-  # phase 2.
-  #       - import dev configuration to Kustomize patch
-  #       - HelmRelease does not contain any values (default: chart values reflecting prod)
-  # phase 3.
-  #       - find all confs, build Kustomize patch struct
+  # phase 1: import dev configuration to HelmRelease
+  value_path="$chart_deploy_dir/dev.yaml"
+  if [ ! -f $value_path ]; then
+     echo "INFO: Ignoring default values at $chart_path/values.yaml" # DRY
+  else
 
-  # replicate helm-values directory structure
-  # find $chart_deploy_dir -type d | sed "s|$chart_deploy_dir|${gen_folder}|" | xargs mkdir -p
-  cp -R $chart_deploy_dir/* ${gen_folder}/
+    # TODO
+    # phase 2.
+    #       - import dev configuration to Kustomize patch
+    #       - HelmRelease does not contain any values (default: chart values reflecting prod)
+    # phase 3.
+    #       - find all confs, build Kustomize patch struct
 
-  echo "INFO: Parsing $value_path"
-  echo "  values:" >> $output_file
-  while IFS= read -r line
-  do
-    if [[ ! $line =~ $comment_regex && ! $line =~ $empty_regex ]] ; then
-      # handle templated configs
-      if [[ ${line} == *"$tpl_indicator"* ]] ; then
+    # replicate helm-values directory structure
+    # find $chart_deploy_dir -type d | sed "s|$chart_deploy_dir|${gen_folder}|" | xargs mkdir -p
+    cp -R $chart_deploy_dir/* ${gen_folder}/
+
+    echo "INFO: Parsing $value_path"
+    echo "  values:" >> $output_file
+    while IFS= read -r line
+    do
+      if [[ ! $line =~ $comment_regex && ! $line =~ $empty_regex ]] ; then
+        # handle templated configs
+        if [[ ${line} == *"$tpl_indicator"* ]] ; then
         # handle templated config of ingres domain i.e. {{ k8_host }} or {{ lookup('env','K8S_HOST') or 'k8s' }}
-        line=`echo "$line" | sed "s/{{[ ]*\(k8s_host\|lookup('env','K8S_HOST') or 'k8s'\)[ ]*}}/$des_host/g"`
-        # handle templated config of ssl flag i.e. {{ lookup('env','SSL_ENABLED') or 'true' | bool }} 
-        line=`echo "$line" | sed 's/RequireSSL:.*/RequireSSL: true/'`
-        # handle templated config of https URL i.e. {{ 'https' if ssl_enabled == true else 'http' }} 
-        line=`echo "$line" | sed 's/Url: "{{.*}}:/Url: "https:/g'`
+          line=`echo "$line" | sed "s/{{[ ]*\(k8s_host\|lookup('env','K8S_HOST') or 'k8s'\)[ ]*}}/$des_host/g"`
+          # handle templated config of ssl flag i.e. {{ lookup('env','SSL_ENABLED') or 'true' | bool }} 
+          line=`echo "$line" | sed 's/RequireSSL:.*/RequireSSL: true/'`
+          # handle templated config of https URL i.e. {{ 'https' if ssl_enabled == true else 'http' }} 
+          line=`echo "$line" | sed 's/Url: "{{.*}}:/Url: "https:/g'`
+        fi
+        # warn about non handled templated config
+        if [[ ${line} == *"$tpl_indicator"* ]] ; then
+          echo "WARN: Non handled templated config $line"
+        fi
+        # write line to output file
+        echo "    $line" >> $output_file
       fi
-      # warn about non handled templated config
-      if [[ ${line} == *"$tpl_indicator"* ]] ; then
-        echo "WARN: Non handled templated config $line"
-      fi
-      # write line to output file
-      echo "    $line" >> $output_file
-    fi
-  done < "$value_path"
+    done < "$value_path"
+  fi
 fi
 
-echo -e "$output_file written successfully.\n"
+echo -e "INFO: $output_file written successfully.\n"

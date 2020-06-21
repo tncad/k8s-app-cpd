@@ -71,4 +71,5 @@ do
   echo "- ${helmRelease##*/}" >> $output_file
 done
 
-echo "$output_file written successfully."
+echo -e "INFO: $output_file written successfully.\n"
+cat $output_file
