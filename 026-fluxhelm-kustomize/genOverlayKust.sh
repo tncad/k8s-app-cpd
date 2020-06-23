@@ -45,25 +45,9 @@ if [[ "${overlay_dir: -1}" == '/' ]] ; then
   overlay_dir="${overlay_dir::-1}"
 fi
 
-# create Kustomization
-output_file=$overlay_dir/kustomization.yaml
-cat > $output_file <<- "EOF"
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-EOF
-
-# add target namespace if passed
-if [ ! -z ${namespace+x} ] ; then
-  echo "namespace: $namespace" >> $output_file
-fi
-# add name prefix if activated
-if [[ $include_np == true ]] ; then
-  echo "namePrefix: ${overlay_dir##*/}-" >> $output_file
-fi
-
 # clean inherited patches
-#echo "INFO: Removing previously inherited patches"
-#rm "$(pwd)/$overlay_dir/*-inherited.*"
+echo "INFO: Removing previously inherited patches"
+rm "$(pwd)/$overlay_dir/*-inherited.*"
 
 # recursively search for base
 rel_base_dir=".."
@@ -82,8 +66,23 @@ do
     echo "INFO: Found $rel_base_dir/kustomization.yaml"
     break
   fi
-  # collect patches where a customization exists
+  # where a kustomization exists...
   if [ -f "$abs_cur_dir/kustomization.yaml" ] ; then
+    # collect namespace if none yet found
+    if [ -z ${inherited_ns+x} ] ; then
+	ns_lines=$( cat $abs_cur_dir/kustomization.yaml | grep -i "namespace:" | wc -l)
+        if [ $ns_lines -gt 0 ] ; then
+	  inherited_ns=$( cat $abs_cur_dir/kustomization.yaml | grep -i "namespace:" | cut -d' ' -f2 )
+        fi	
+    fi
+    # collect namePrefix if none yet found
+    if [ -z ${inherited_np+x} ] ; then
+	np_lines=$( cat $abs_cur_dir/kustomization.yaml | grep -i "namePrefix:" | wc -l )
+	if [ $np_lines -gt 0 ] ; then
+	  inherited_np=$( cat $abs_cur_dir/kustomization.yaml | grep -i "namePrefix:" | cut -d' ' -f2 )
+	fi
+    fi
+    # collect resources and patches
     for resPatch in $( find $abs_cur_dir/*.* \( \( -name "*.yaml" -or -name "*.json" \) -and ! \( -name 'kustomization.yaml' \) \) )
     do
       cp $resPatch $overlay_dir/$( \
@@ -95,25 +94,54 @@ do
   rel_base_dir="../$rel_base_dir"
 done
 
-# bases
+# create Overlay Kustomize file
+output_file=$overlay_dir/kustomization.yaml
+cat > $output_file <<- "EOF"
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+EOF
+
+# write target namespace if passed or inherited
+if [ ! -z ${namespace+x} ] ; then
+  echo "namespace: $namespace" >> $output_file
+else
+  if [ ! -z ${inherited_ns+x} ] ; then
+    echo "namespace: $inherited_ns" >> $output_file
+  fi
+fi
+
+# write name prefix if activated
+if [[ $include_np == true ]] ; then
+  echo "namePrefix: ${overlay_dir##*/}-" >> $output_file
+else
+  if [ ! -z ${inherited_np+x} ] ; then
+    echo "namePrefix: $inherited_np" >> $output_file
+  fi
+fi
+
+# write bases
 echo -e "bases:\n- ${rel_base_dir}" >> $output_file
 
-# resources
-nb_yaml=$( find $overlay_dir/*.* -name "*.yaml" ! \( -name 'kustomization.yaml' \) | wc -l )
-echo "INFO: Found $nb_yaml YAML resource(s)."
-if [ $nb_yaml -gt 0 ] ; then
+# write resources
+nb_resources=`fgrep "kind: HelmRelease" $overlay_dir/*.yaml --no-messages --files-without-match --exclude="kustomization.yaml" | wc -l`
+echo "INFO: Found $nb_resources YAML resource(s)."
+if [ $nb_resources -gt 0 ] ; then
   echo "resources:" >> $output_file
-  for resYAML in $( find $overlay_dir/*.* -name "*.yaml" ! \( -name 'kustomization.yaml' \) )
+  for resYAML in $( fgrep "kind: HelmRelease" $overlay_dir/*.yaml --no-messages --files-without-match --exclude="kustomization.yaml" | cut -d":" -f1 )
   do
     echo "- ${resYAML##*/}" >> $output_file
   done
 fi
 
-# patches
-nb_json=$( find $overlay_dir/*.* -name "*.json" | wc -l )
-echo "INFO: Found $nb_json JSON patch(es)."
-if [ $nb_json -gt 0 ] ; then
+# write patches
+nb_patches=$((`fgrep "kind: HelmRelease" --no-messages --include="*.yaml" --exclude="kustomization.yaml" $overlay_dir/*.* | wc -l` + `find $overlay_dir/*.* -name "*.json" | wc -l` ))
+echo "INFO: Found $nb_patches YAML or JSON patch(es)."
+if [ $nb_patches -gt 0 ] ; then
   echo "patches:" >> $output_file
+  for resYAML in $( fgrep "kind: HelmRelease" --no-messages --include="*.yaml" --exclude="kustomization.yaml" $overlay_dir/*.* | cut -d":" -f1 )
+  do
+    echo "- path: ${resYAML##*/}" >> $output_file
+  done
   for resJSON in $( find $overlay_dir/*.* -name "*.json" )
   do
     echo "- path: ${resJSON##*/}" >> $output_file
