@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: arch
+bases:
+- ../../../../base
+resources:
+- arch-ns.yaml
+patches:
+- path: cluster-patch-inherited.json
+  target:
+    group: helm.fluxcd.io
+    version: v1
+    kind: HelmRelease

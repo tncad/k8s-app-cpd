@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+- ../../base
+patches:
+- path: cluster-patch.json
+  target:
+    group: helm.fluxcd.io
+    version: v1
+    kind: HelmRelease
