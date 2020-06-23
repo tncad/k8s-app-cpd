@@ -6,21 +6,29 @@ display_usage() {
 	echo -e "Options:\n-n: Default namespace\n-h: Usage details (--help)\n"
 }
 
-# argument count verififcation
-# user should supply at least 1 for help option or CHART_PATH parameter
-if [ $# -lt 1 ] ; then
-  echo "ERROR: Missing arguments."
-  display_usage
-  exit 1
-fi
-if [[ $1 == "-h" || $1 == "--help" ]] ; then
-  echo -e "\nDescription:\nCreate a Kustomize Base file based on HelmRelease resources available in HELMREL_DIR."
-  display_usage
-  exit 0
-fi
+# options validation
+case "$#" in
+  *)
+   while [ -n "$1" ]; do
+     case "$1" in
+      -h|--help)
+          echo -e "\nDescription:\nCreate a Kustomize Overlay file in OVERLAY_DIR."
+          display_usage
+          exit 0 ;;
+      -n) namespace="$2"
+	  echo "Default namespace set to $namespace"
+	  shift ;;
+       -*|--*) echo "ERROR: Wrong or too many arguments"
+          display_usage
+          exit 1 ;;
+       *) helmrel_dir="$1"      # or ${@: -1} if allways last argument
+          echo "INFO: HELMREL_DIR set to $overlay_dir"
+          shift ;;
+     esac
+	  shift
+     done
+esac
 
-# verify parameter HELMREL_DIR (last argument)
-helmrel_dir="${@: -1}"
 # remove final slash in case it is passed
 if [[ "${helmrel_dir: -1}" == '/' ]] ; then
   helmrel_dir="${helmrel_dir::-1}"
@@ -34,23 +42,6 @@ if [ $nb_helmrel -eq 0 ] ; then
 else
   echo "INFO: Found $nb_helmrel HelmRelease(s)."
 fi
-
-# options validation
-case "$#" in
-  1) shift ;;
-  *)
-   while [ -n "$1" ]; do
-     case "$1" in
-      -n) namespace="$2"
-	  echo "Default namespace set to $namespace"
-	  shift ;;
-       --) shift # double dash makes them parameters
-	  break ;;
-       *) shift ;; # echo "ERROR: Invalid option $1"
-     esac
-	  shift
-     done
-esac
 
 # create Kustomization
 output_file=$helmrel_dir/kustomization.yaml
