@@ -130,7 +130,8 @@ else
 
     # replicate helm-values directory structure
     # find $chart_deploy_dir -type d | sed "s|$chart_deploy_dir|${gen_folder}|" | xargs mkdir -p
-    cp -R $chart_deploy_dir/* ${gen_folder}/
+    mkdir $gen_folder/migration
+    cp -R $chart_deploy_dir/* ${gen_folder}/migration
 
     echo "INFO: Parsing $value_path"
     echo "  values:" >> $output_file
