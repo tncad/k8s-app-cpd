@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # default options
-src_repository="http://chartmuseum:8080" # "https://kubernetes-charts-storage.datapwn.com"
-des_host="k8s" 				 # "arch.dev.datapwn.com"
+src_repository="http://chartmuseum:8080"
+des_host="k8s" 
 gen_folder="$(pwd)"
 
 # help
@@ -130,8 +130,8 @@ else
 
     # replicate helm-values directory structure
     # find $chart_deploy_dir -type d | sed "s|$chart_deploy_dir|${gen_folder}|" | xargs mkdir -p
-    mkdir $gen_folder/migration
-    cp -R $chart_deploy_dir/* ${gen_folder}/migration
+    mkdir $gen_folder/helm-values
+    cp -R $chart_deploy_dir/* ${gen_folder}/helm-values
 
     echo "INFO: Parsing $value_path"
     echo "  values:" >> $output_file
