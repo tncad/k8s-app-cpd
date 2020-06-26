@@ -1,4 +1,0 @@
-test:
-  - image: gcr.io/k8s-skaffold/skaffold-example
-    structureTests:
-      - './structure-test/*'

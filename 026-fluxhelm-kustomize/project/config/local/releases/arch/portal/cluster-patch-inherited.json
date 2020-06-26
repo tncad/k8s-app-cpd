@@ -1,5 +1,0 @@
-[
- {"op": "replace",
- "path": "/spec/chart/repository",
- "value": "http://chartmuseum:8080"}
-]

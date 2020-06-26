@@ -1,7 +1,0 @@
-{{ partial "info-panel.html" . }}
-{{ partial "page-meta-links.html" . }}
-{{ if not .Params.notoc }}
-{{ with .TableOfContents }}
-{{ . }}
-{{ end }}
-{{ end }}
