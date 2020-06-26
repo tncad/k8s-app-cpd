@@ -1,0 +1,4 @@
+
+The routine deploy --released-charts downloads only the charts required by a given stack (but in a stable version), and stores them into ~/.helm/cache/archive.
+
+The script pullcharts.sh fetches all requirements from all source charts (but in a specified version) and stores them into ~/.helm/repository/local.

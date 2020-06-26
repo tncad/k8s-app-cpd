@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # default options
-src_repository="http://chartmuseum:8080"
+src_repository="http://chartmuseum-chartmuseum:8080"
 des_host="k8s" 
 gen_folder="$(pwd)"
 

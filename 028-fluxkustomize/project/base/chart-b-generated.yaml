@@ -1,0 +1,13 @@
+---
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: chart-b
+  annotations:
+    flux.weave.works/automated: "true"
+spec:
+  releasename: chart-b
+  chart:
+    repository: "http://10.1.1.127:8080"
+    name: chart-b
+    version: 0.1.0

@@ -8,6 +8,6 @@ metadata:
 spec:
   releasename: chart-c
   chart:
-    repository: "http://chartmuseum:8080"
+    repository: "http://chartmuseum-chartmuseum:8080"
     name: chart-c
     version: 0.1.0

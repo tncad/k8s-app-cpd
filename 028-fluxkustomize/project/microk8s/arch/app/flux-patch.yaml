@@ -1,0 +1,14 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    # Reference: https://docs.fluxcd.io/en/latest/tutorials/driving-flux
+    flux.weave.works/automated: "true"
+    #flux.weave.works/tag.init: regexp:^3.*
+    #flux.weave.works/tag.podinfod: semver:~1.4
+    #flux.weave.works/locked: "true"
+    #flux.weave.works/locked_msg: Lock deployment in production
+    #flux.weave.works/locked_user: tncad <tncad@github.com>
+  name: podinfo
+  namespace: arch
