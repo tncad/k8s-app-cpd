@@ -22,7 +22,7 @@ case "$#" in
           display_usage
           exit 1 ;;
        *) helmrel_dir="$1"      # or ${@: -1} if allways last argument
-          echo "INFO: HELMREL_DIR set to $overlay_dir"
+          echo "INFO: HELMREL_DIR set to $helmrel_dir"
           shift ;;
      esac
 	  shift
