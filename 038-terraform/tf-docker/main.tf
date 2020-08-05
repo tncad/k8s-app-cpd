@@ -5,7 +5,7 @@ provider "docker" {
 
 # image resource
 resource "docker_image" "nginx" {
-  name         = "nginx:latest"
+  name         = "nginx:${var.nginx_version}"
   keep_locally = false
 }
 
