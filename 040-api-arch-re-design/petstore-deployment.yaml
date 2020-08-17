@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petstore-deployment
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: petstore
+  replicas: 2
+  template: 
+    metadata:
+      labels:
+        app: petstore
+    spec:
+      containers:
+      - name: petstore-worker
+        image: openapitools/openapi-petstore
+        ports:
+        - containerPort: 8080
+        env:
+        - name: OPENAPI_BASE_PATH
+          value: "/v3"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: petstore-service
+spec:
+  selector:
+    app: petstore
+  type: LoadBalancer
+  ports:
+    - name: petstore-port
+      port: 80
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: petstore-ingress
+spec:
+  rules:
+  - host: petstore.host
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: petstore-service
+          servicePort: 80
