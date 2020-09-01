@@ -14,7 +14,7 @@ df = pd.DataFrame(json_normalize(dt))
 
 # create in-memory db
 from sqlalchemy import create_engine
-engine = create_engine('sqlite://', echo=False)
+engine = create_engine('sqlite:///denorm.db', echo=False)
 
 # create dimensions
 for col in df.columns:

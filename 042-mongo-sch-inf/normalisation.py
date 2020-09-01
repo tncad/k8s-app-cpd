@@ -11,7 +11,7 @@ print('-- DF COLUMNS:\n',df.columns)
 
 # create in-memory db
 from sqlalchemy import create_engine
-engine = create_engine('sqlite://', echo=False)
+engine = create_engine('sqlite:///norm.db', echo=False)
 
 # create schema and write records to db
 df.to_sql('rocketchat_message', 
