@@ -17,5 +17,5 @@ engine = create_engine('sqlite:///norm.db', echo=False)
 df.to_sql('rocketchat_message', 
         con=engine, 
         if_exists='replace',
-        index_label='id')
+        index=False)
 print('-- DB SELECT:\n', engine.execute('SELECT * FROM rocketchat_message').fetchall())
