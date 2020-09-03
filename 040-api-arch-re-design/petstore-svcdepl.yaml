@@ -35,17 +35,3 @@ spec:
     - name: petstore-port
       port: 80
       targetPort: 8080
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: petstore-ingress
-spec:
-  rules:
-  - host: petstore.host
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: petstore-service
-          servicePort: 80
