@@ -9,9 +9,9 @@ from pandas.io.json import json_normalize
 df = pd.DataFrame(json_normalize(dt))
 print('-- DF COLUMNS:\n',df.columns)
 
-# create in-memory db
+# create file db
 from sqlalchemy import create_engine
-engine = create_engine('sqlite:///norm.db', echo=False)
+engine = create_engine('sqlite:///db.sqlite.norm', echo=False)
 
 # create schema and write records to db
 df.to_sql('rocketchat_message', 

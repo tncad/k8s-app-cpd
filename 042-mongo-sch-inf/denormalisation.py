@@ -1,38 +1,45 @@
 # read input file
 import json
-with open(r'rocketchat_message_sample.json') as f:
-    dt = json.load(f)
+fact_name = 'message'
+with open(r'rocketchat_' + fact_name + '_sample.json') as f:
+    data = json.load(f)
 
-# flag dimension columns
-dt['dim_user'] = dt.pop('u')
-dt['dim_time'] = {'_id':'0','ts':dt.pop('ts')}
+# custom: flag metrics and dimension columns
+data['units'] = 0.0
+data['dim_user'] = data.pop('u')
+data['dim_time'] = {'_id':0,'dt':data.pop('ts')}
+
+# custom: enrich dimensions
+import pandas as pd, dateutil.parser
+dt = dateutil.parser.parse(data['dim_time']['dt'])
+data['dim_time']['hour'] = dt.hour
+data['dim_time']['day'] = dt.day
+data['dim_time']['month'] = dt.month
+data['dim_time']['year'] = dt.year
+data['dim_time']['weekday'] = dt.weekday()
+data['dim_time']['weeknum'] = dt.isocalendar()[1]
 
 # normalize data
-import pandas as pd
 from pandas.io.json import json_normalize
-df = pd.DataFrame(json_normalize(dt))
+df = pd.DataFrame(json_normalize(data))
 
-# create in-memory db
+# create file db
 from sqlalchemy import create_engine
-engine = create_engine('sqlite:///denorm.db', echo=False)
+db_uri = 'sqlite:///db.sqlite.denorm'
+engine = create_engine(db_uri, echo=False)
 
-# create dimension tales
+# create temporary dimension tales
 for col in df.columns:
     if col.startswith('dim_'):
         tbl = col.split('.')[0]
-        pd.DataFrame(json_normalize(dt[tbl])).to_sql(tbl, 
+        pd.DataFrame(json_normalize(data[tbl])).to_sql(tbl, 
             con=engine,
             if_exists='replace',
             index=False)
 
-# create fact table
+# create temporary fact table
 df.drop(list(df.filter(regex='dim_[^.]*\.[^_]')), axis=1, inplace=True)
-df.to_sql('message',
+df.to_sql(fact_name,
         con=engine,
         if_exists='replace',
         index=False)
-
-# select data
-print('-- DB SELECT FACT:\n', engine.execute('SELECT * FROM message').fetchall())
-print('-- DB SELECT DIM1:\n', engine.execute('SELECT * FROM dim_user').fetchall())
-print('-- DB SELECT DIM2:\n', engine.execute('SELECT * FROM dim_time').fetchall())
