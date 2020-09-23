@@ -6,7 +6,9 @@ with open(r'rocketchat_message_sample.json') as f:
 # normalize data
 import pandas as pd
 from pandas.io.json import json_normalize
+# todo: use flatten instead of neormalize, 
 df = pd.DataFrame(json_normalize(dt))
+# todo: replace dots in column names with underscore
 print('-- DF COLUMNS:\n',df.columns)
 
 # create file db
