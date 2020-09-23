@@ -31,7 +31,7 @@ for t in meta.sorted_tables:
        # pk
        t.append_constraint( PrimaryKeyConstraint('_id', name=t.name + '_pk') )
        tbl_ddl = CreateTable(t)
-    # todo: standardize data types to VARCHAR
+    # todo: standardize data types to VARCHAR (except fact units)
     # todo: replace dots with underscores in column names       
     print(tbl_ddl) # stdout ddl
     # recreate table
