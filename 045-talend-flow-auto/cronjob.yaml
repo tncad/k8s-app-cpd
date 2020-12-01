@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: staging-to-core
 spec:
-  schedule: "*/5 * * * *"   # runs every 5min.
+  schedule: "* */4 * * *"   # runs every 4h
   jobTemplate:
     spec:
       template:
@@ -12,7 +12,7 @@ spec:
           #  - name: my-secrets
           containers:
           - name: staging-to-core
-            image: 10.152.183.76:5000/staging-to-core
+            image: registry.container-regsitry.svc.cluster.local:32000/staging-to-core
             env:
               - name: ACCOUNT
                 valueFrom:
@@ -37,6 +37,6 @@ spec:
             args: 
               - --context_param context.Core_account=
               - --context_param context.Core_region=
-              - --context_param Core_userPassword_userId=jcl
+              - --context_param Core_userPassword_userId=tncad
               - --context_param Core_userPassword_password=
           restartPolicy: OnFailure
